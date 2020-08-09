@@ -6,14 +6,15 @@
 
 # YouTube Music Desktop App
 
-<img alt="window" src="https://ytmdesktop.app/img/product/main_3.png" width="500px">
-<img alt="settings" src="https://ytmdesktop.app/img/product/settings.png" width="430px">
+<img alt="window" src="https://ytmdesktop.app/img/product/main_5.png">
+&nbsp;
 
 # Available for
 
 ## Windows
 
 - Winget: ```winget install "YouTube Music Desktop App"``` or ```winget install Ytmdesktop.Ytmdesktop```
+- Chocolatey: ```choco install ytmdesktop```
 - Binaries: https://github.com/ytmdesktop/ytmdesktop/releases
 
 ## Linux
@@ -24,6 +25,7 @@
 
 ## Mac
 
+- Brew: ```brew cask install ytmdesktop-youtube-music```
 - Binaries: https://github.com/ytmdesktop/ytmdesktop/releases
 
 # To Contribute

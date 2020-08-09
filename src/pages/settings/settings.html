@@ -192,6 +192,25 @@
                                     <tr>
                                         <td>
                                             <span
+                                                i18n="i18n_LABEL_SETTINGS_TAB_GENERAL_DISABLE_HARDWARE_ACCELERATION"
+                                            ></span>
+                                        </td>
+                                        <td class="right">
+                                            <div class="switch">
+                                                <label>
+                                                    <input
+                                                        type="checkbox"
+                                                        id="settings-disable-hardware-acceleration"
+                                                    />
+                                                    <span class="lever"></span>
+                                                </label>
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>
+                                            <span
                                                 i18n="i18n_LABEL_SETTINGS_TAB_GENERAL_SELECT_LANGUAGE"
                                             ></span>
                                             <sub
@@ -203,11 +222,14 @@
                                         </td>
                                         <td>
                                             <select id="settings-app-language">
-                                                <option value="en"
-                                                    >English</option
+                                                <option value="id"
+                                                    >Bahasa Indonesia</option
                                                 >
                                                 <option value="de"
                                                     >Deutsch</option
+                                                >
+                                                <option value="en"
+                                                    >English</option
                                                 >
                                                 <option value="es"
                                                     >Español</option
@@ -215,17 +237,8 @@
                                                 <option value="fr"
                                                     >Français</option
                                                 >
-                                                <option value="id"
-                                                    >Bahasa Indonesia</option
-                                                >
                                                 <option value="it"
                                                     >Italiano</option
-                                                >
-                                                <option value="ja"
-                                                    >日本語</option
-                                                >
-                                                <option value="ko"
-                                                    >한국어</option
                                                 >
                                                 <option value="nl"
                                                     >Nederlands</option
@@ -236,17 +249,26 @@
                                                 <option value="pt"
                                                     >Português</option
                                                 >
-                                                <option value="ru"
-                                                    >Русский</option
-                                                >
                                                 <option value="tr"
                                                     >Türkçe</option
+                                                >
+                                                <option value="ru"
+                                                    >Русский</option
                                                 >
                                                 <option value="uk"
                                                     >Українська</option
                                                 >
+                                                <option value="ar"
+                                                    >العربية</option
+                                                >
+                                                <option value="ja"
+                                                    >日本語</option
+                                                >
                                                 <option value="zh"
                                                     >简体中文</option
+                                                >
+                                                <option value="ko"
+                                                    >한국어</option
                                                 >
                                             </select>
                                         </td>
@@ -269,7 +291,7 @@
                                         <td colspan="2">
                                             <div
                                                 class="divider"
-                                                style="margin-top: 5%"
+                                                style="margin-top: 5%;"
                                             >
                                                 &nbsp;
                                             </div>
@@ -357,26 +379,37 @@
                                     <tr>
                                         <td>
                                             <span
-                                                i18n="i18n_LABEL_SETTINGS_TAB_MINIPLAYER_SELECT_SIZE"
+                                                i18n="i18n_LABEL_SETTINGS_TAB_MINIPLAYER_RESIZABLE"
                                             ></span>
                                         </td>
+                                        <td class="right">
+                                            <div class="switch">
+                                                <label>
+                                                    <input
+                                                        type="checkbox"
+                                                        id="settings-miniplayer-resizable"
+                                                    />
+                                                    <span class="lever"></span>
+                                                </label>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
                                         <td>
-                                            <select
-                                                id="settings-miniplayer-size"
-                                            >
-                                                <option value="1"> ■ </option>
-                                                <option value="2"> ■■ </option>
-                                                <option value="3"> ■■■ </option>
-                                                <option value="4">
-                                                    ■■■■
-                                                </option>
-                                                <option value="5">
-                                                    ■■■■■
-                                                </option>
-                                                <option value="6">
-                                                    ■■■■■■
-                                                </option>
-                                            </select>
+                                            <span
+                                                i18n="i18n_LABEL_SETTINGS_TAB_MINIPLAYER_SHOW_TASK"
+                                            ></span>
+                                        </td>
+                                        <td class="right">
+                                            <div class="switch">
+                                                <label>
+                                                    <input
+                                                        type="checkbox"
+                                                        id="settings-miniplayer-show-task"
+                                                    />
+                                                    <span class="lever"></span>
+                                                </label>
+                                            </div>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -402,7 +435,10 @@
                                                 >100</span
                                             >%
                                             <p
-                                                style="float: right; margin: -7px 13px 0 8px;"
+                                                style="
+                                                    float: right;
+                                                    margin: -7px 13px 0 8px;
+                                                "
                                                 class="range-field"
                                             >
                                                 <input
@@ -529,6 +565,9 @@
                                     <tr id="companion-server-protect">
                                         <td>
                                             <span
+                                                class="settings-item-child"
+                                            ></span>
+                                            <span
                                                 i18n="i18n_LABEL_SETTINGS_TAB_GENERAL_COMPANION_SERVER_PROTECT"
                                             ></span>
                                             <span
@@ -561,6 +600,14 @@
                                         </td>
                                         <td class="right">
                                             <div class="switch">
+                                                <button
+                                                    class="waves-effect waves-light btn-flat white-text btn-tiny"
+                                                    id="btn-discord-setting"
+                                                >
+                                                    <i class="material-icons"
+                                                        >settings</i
+                                                    >
+                                                </button>
                                                 <label>
                                                     <input
                                                         type="checkbox"
@@ -633,11 +680,77 @@
                                             </div>
                                         </td>
                                     </tr>
+                                    <tr class="windows10-specific">
+                                        <td>
+                                            <span
+                                                i18n="i18n_LABEL_SETTINGS_TAB_INTEGRATION_WINDOWS10_MEDIA_SERVICE"
+                                            ></span>
+                                        </td>
+                                        <td class="right">
+                                            <div class="switch">
+                                                <label>
+                                                    <input
+                                                        type="checkbox"
+                                                        id="settings-windows10-media-service"
+                                                    />
+                                                    <span class="lever"></span>
+                                                </label>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr
+                                        id="windows-10-show-info"
+                                        class="windows10-specific"
+                                    >
+                                        <td>
+                                            <span
+                                                class="settings-item-child"
+                                            ></span>
+                                            <span
+                                                i18n="i18n_LABEL_SETTINGS_TAB_INTEGRATION_WINDOWS10_MEDIA_SERVICE_SHOW_INFO"
+                                            ></span>
+                                        </td>
+                                        <td class="right">
+                                            <div class="switch">
+                                                <label>
+                                                    <input
+                                                        type="checkbox"
+                                                        id="settings-windows10-media-service-show-info"
+                                                    />
+                                                    <span class="lever"></span>
+                                                </label>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 </thead>
                             </table>
                         </div>
 
                         <div id="tab-shortcut" class="tab-content">
+                            <div
+                                id="modalEditAccelerator"
+                                class="modal black-text"
+                            >
+                                <div class="modal-content">
+                                    <h5
+                                        class="center-align"
+                                        id="modalEditAcceleratorKeys"
+                                    ></h5>
+                                </div>
+                                <div class="modal-footer black-text">
+                                    <a
+                                        id="cancelAccelerator"
+                                        class="modal-close waves-effect waves-green btn-flat btn-sm black-text"
+                                        >Cancel</a
+                                    >
+                                    <a
+                                        id="saveAccelerator"
+                                        class="modal-close waves-effect waves-green btn-flat btn-sm red"
+                                        >Save</a
+                                    >
+                                </div>
+                            </div>
+
                             <div class="row">
                                 <div class="col s12">
                                     <table class="table">
@@ -657,9 +770,21 @@
                                                         >pause</i
                                                     >
                                                     <span class="shortcut-or"
-                                                        >or</span
+                                                        >or&nbsp;</span
                                                     >
-                                                    CmdOrCtrl + Shift + Space
+                                                    <button
+                                                        id="btn-accelerator-media-play-pause"
+                                                        data-target="modalEditAccelerator"
+                                                        class="modal-trigger waves-effect waves-light btn-small text-initial red"
+                                                    >
+                                                        <span
+                                                            id="settings-accelerators_media-play-pause"
+                                                        ></span>
+                                                        <i
+                                                            class="tiny material-icons right"
+                                                            >edit</i
+                                                        >
+                                                    </button>
                                                 </th>
                                             </tr>
                                             <tr>
@@ -674,9 +799,21 @@
                                                         >skip_next</i
                                                     >
                                                     <span class="shortcut-or"
-                                                        >or</span
+                                                        >or&nbsp;</span
                                                     >
-                                                    CmdOrCtrl + Shift + PageUp
+                                                    <button
+                                                        id="btn-accelerator-media-track-next"
+                                                        data-target="modalEditAccelerator"
+                                                        class="modal-trigger waves-effect waves-light btn-small text-initial red"
+                                                    >
+                                                        <span
+                                                            id="settings-accelerators_media-track-next"
+                                                        ></span>
+                                                        <i
+                                                            class="tiny material-icons right"
+                                                            >edit</i
+                                                        >
+                                                    </button>
                                                 </th>
                                             </tr>
                                             <tr>
@@ -691,9 +828,21 @@
                                                         >skip_previous</i
                                                     >
                                                     <span class="shortcut-or"
-                                                        >or</span
+                                                        >or&nbsp;</span
                                                     >
-                                                    CmdOrCtrl + Shift + PageDown
+                                                    <button
+                                                        id="btn-accelerator-media-track-previous"
+                                                        data-target="modalEditAccelerator"
+                                                        class="modal-trigger waves-effect waves-light btn-small text-initial red"
+                                                    >
+                                                        <span
+                                                            id="settings-accelerators_media-track-previous"
+                                                        ></span>
+                                                        <i
+                                                            class="tiny material-icons right"
+                                                            >edit</i
+                                                        >
+                                                    </button>
                                                 </th>
                                             </tr>
                                             <tr>
@@ -703,7 +852,19 @@
                                                     ></span>
                                                 </td>
                                                 <th>
-                                                    CmdOrCtrl + Shift + numadd
+                                                    <button
+                                                        id="btn-accelerator-media-track-like"
+                                                        data-target="modalEditAccelerator"
+                                                        class="modal-trigger waves-effect waves-light btn-small text-initial red"
+                                                    >
+                                                        <span
+                                                            id="settings-accelerators_media-track-like"
+                                                        ></span>
+                                                        <i
+                                                            class="tiny material-icons right"
+                                                            >edit</i
+                                                        >
+                                                    </button>
                                                 </th>
                                             </tr>
                                             <tr>
@@ -713,7 +874,63 @@
                                                     ></span>
                                                 </td>
                                                 <th>
-                                                    CmdOrCtrl + Shift + numsub
+                                                    <button
+                                                        id="btn-accelerator-media-track-dislike"
+                                                        data-target="modalEditAccelerator"
+                                                        class="modal-trigger waves-effect waves-light btn-small text-initial red"
+                                                    >
+                                                        <span
+                                                            id="settings-accelerators_media-track-dislike"
+                                                        ></span>
+                                                        <i
+                                                            class="tiny material-icons right"
+                                                            >edit</i
+                                                        >
+                                                    </button>
+                                                </th>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <span
+                                                        i18n="i18n_MEDIA_CONTROL_VOLUME_UP"
+                                                    ></span>
+                                                </td>
+                                                <th>
+                                                    <button
+                                                        id="btn-accelerator-media-volume-up"
+                                                        data-target="modalEditAccelerator"
+                                                        class="modal-trigger waves-effect waves-light btn-small text-initial red"
+                                                    >
+                                                        <span
+                                                            id="settings-accelerators_media-volume-up"
+                                                        ></span>
+                                                        <i
+                                                            class="tiny material-icons right"
+                                                            >edit</i
+                                                        >
+                                                    </button>
+                                                </th>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <span
+                                                        i18n="i18n_MEDIA_CONTROL_VOLUME_DOWN"
+                                                    ></span>
+                                                </td>
+                                                <th>
+                                                    <button
+                                                        id="btn-accelerator-media-volume-down"
+                                                        data-target="modalEditAccelerator"
+                                                        class="modal-trigger waves-effect waves-light btn-small text-initial red"
+                                                    >
+                                                        <span
+                                                            id="settings-accelerators_media-volume-down"
+                                                        ></span>
+                                                        <i
+                                                            class="tiny material-icons right"
+                                                            >edit</i
+                                                        >
+                                                    </button>
                                                 </th>
                                             </tr>
                                             <tr>
@@ -724,7 +941,7 @@
                                                 </td>
                                                 <th>
                                                     <span class="shortcut-or"
-                                                        >2x</span
+                                                        >2x&nbsp;</span
                                                     ><i
                                                         class="material-icons media-icons"
                                                         >play_arrow</i
@@ -760,16 +977,23 @@
                             style="padding-top: 20%;"
                         >
                             <div class="row">
-                                <span style="color: #AAA;">
+                                <span style="color: #aaa;">
                                     v<span id="app-version"></span> <br /><br />
-                                    <!--button id="check-update" class="btn waves-effect waves-light red">Check updates</button-->
+                                    <button
+                                        id="release-notes"
+                                        class="btn waves-effect waves-light red"
+                                    >
+                                        <span
+                                            i18n="i18n_LABEL_CHANGELOG"
+                                        ></span>
+                                    </button>
                                 </span>
                             </div>
                             <div class="row">
                                 Made with
-                                <span style="color: #f44336">❤</span> by
+                                <span style="color: #f44336;">❤</span> by
                                 adlerluiz & contributors
-                                <p style="color: #AAA;">
+                                <p style="color: #aaa;">
                                     https://ytmdesktop.app
                                 </p>
                             </div>

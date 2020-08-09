@@ -12,7 +12,9 @@ files:
   - '!package.json'
   - '!package-lock.json'
   - '!.cache'
-
+  - '!app-update.yml'
+  - '!dev-app-update.yml'
+  
 protocols:
   name: YouTube Music Desktop
   schemes: [ytmd]
@@ -22,14 +24,14 @@ electronDownload:
   cache: '.cache/electron-builder/'
 
 win:
-  icon: src/assets
+  icon: src/assets/favicon.ico
   publish:
     provider: generic
     url: 'https://dl.ytmdesktop.app/win'
     channel: latest
 
 mac:
-  icon: src/assets
+  icon: src/assets/favicon.icns
   category: public.app-category.music
   darkModeSupport: true
   target:
@@ -40,7 +42,7 @@ mac:
     channel: latest
 
 linux:
-  icon: src/assets
+  icon: src/assets/favicon.png
   category: AudioVideo
   publish:
     provider: generic
