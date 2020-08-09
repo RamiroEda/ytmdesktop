@@ -18,7 +18,11 @@ content.addListener('dom-ready', function () {
                 createOffTheRoadContent()
             }
         })
-        .catch((_) => ipcRenderer.send('debug', 'error on inject'))
+        .catch((_) =>
+            ipcRenderer.send('log', { type: 'error', data: 'error on inject' })
+        )
+
+    // injectCast()
 })
 
 function createContextMenu() {
@@ -32,7 +36,12 @@ function createContextMenu() {
         document.body.prepend(materialIcons);
     `
         )
-        .catch((_) => ipcRenderer.send('debug', 'error on createContextMenu'))
+        .catch((_) =>
+            ipcRenderer.send('log', {
+                type: 'warn',
+                data: 'error on createContextMenu',
+            })
+        )
 
     content
         .insertCSS(
@@ -105,7 +114,10 @@ function createContextMenu() {
     `
         )
         .catch((_) =>
-            ipcRenderer.send('debug', 'error on createContextMenu insertCSS')
+            ipcRenderer.send('log', {
+                type: 'warn',
+                data: 'error on createContextMenu insertCSS',
+            })
         )
 
     var menu = `<a id="ytmd-menu-lyrics"><i class="material-icons">music_note</i></a> <a id="ytmd-menu-miniplayer"><i class="material-icons">picture_in_picture_alt</i></a> <a id="ytmd-menu-bug-report"><i class="material-icons text-red">bug_report</i></a>`
@@ -120,7 +132,10 @@ function createContextMenu() {
     `
         )
         .catch((_) =>
-            ipcRenderer.send('debug', 'error on createContextMenu prepend')
+            ipcRenderer.send('log', {
+                type: 'warn',
+                data: 'error on createContextMenu prepend',
+            })
         )
 
     // LISTENERS FOR MENU OPTIONS
@@ -176,7 +191,10 @@ function createContextMenu() {
         }`
         )
         .catch((_) =>
-            ipcRenderer.send('debug', 'error on createContextMenu listeners')
+            ipcRenderer.send('log', {
+                type: 'warn',
+                data: 'error on createContextMenu listeners',
+            })
         )
 }
 
@@ -198,7 +216,12 @@ function createMiddleContent() {
         center_content.prepend(element);
     `
         )
-        .catch((_) => ipcRenderer.send('debug', 'error on createMiddleContent'))
+        .catch((_) =>
+            ipcRenderer.send('log', {
+                type: 'warn',
+                data: 'error on createMiddleContent',
+            })
+        )
 }
 
 function createRightContent() {
@@ -234,7 +257,12 @@ function createRightContent() {
             document.getElementById("ytmd_update").classList.remove("hide");
         } );`
         )
-        .catch((_) => ipcRenderer.send('debug', 'error on createRightContent'))
+        .catch((_) =>
+            ipcRenderer.send('log', {
+                type: 'warn',
+                data: 'error on createRightContent',
+            })
+        )
 }
 
 function createPlayerBarContent() {
@@ -264,7 +292,10 @@ function createPlayerBarContent() {
     `
         )
         .catch((_) =>
-            ipcRenderer.send('debug', 'error on createPlayerBarContent')
+            ipcRenderer.send('log', {
+                type: 'warn',
+                data: 'error on createPlayerBarContent',
+            })
         )
 }
 
@@ -286,7 +317,10 @@ function playerBarScrollToChangeVolume() {
     `
         )
         .catch((_) =>
-            ipcRenderer.send('debug', 'error on playerBarScrollToChangeVolume')
+            ipcRenderer.send('log', {
+                type: 'warn',
+                data: 'error on playerBarScrollToChangeVolume',
+            })
         )
 }
 
@@ -315,6 +349,24 @@ function createOffTheRoadContent() {
         `
         )
         .catch((_) =>
-            ipcRenderer.send('debug', 'error on createOffTheRoadContent')
+            ipcRenderer.send('log', {
+                type: 'warn',
+                data: 'error on createOffTheRoadContent',
+            })
         )
+}
+
+function injectCast() {
+    content
+        .executeJavaScript(
+            `
+        // Todo
+        `
+        )
+        .then((data) => {
+            console.log(data)
+        })
+        .catch((err) => {
+            console.log(err)
+        })
 }

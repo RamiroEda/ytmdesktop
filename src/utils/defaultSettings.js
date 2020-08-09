@@ -16,7 +16,11 @@ settingsProvider.setInitialValue('last-fm-login', {
 
 settingsProvider.setInitialValue('settings-app-language', 'en') // English
 
-settingsProvider.setInitialValue('settings-miniplayer-size', '2') // Normal size
+settingsProvider.setInitialValue('settings-miniplayer-size', '200') // Normal size
+
+settingsProvider.setInitialValue('settings-miniplayer-resizable', false) // Not resizable
+
+settingsProvider.setInitialValue('settings-miniplayer-show-task', false) // hide from taskbar
 
 settingsProvider.setInitialValue('settings-lyrics-provider', '1') // OVH
 
@@ -39,9 +43,25 @@ settingsProvider.setInitialValue('settings-accelerators', {
     'media-play-pause': 'CmdOrCtrl+Shift+Space',
     'media-track-next': 'CmdOrCtrl+Shift+PageUp',
     'media-track-previous': 'CmdOrCtrl+Shift+PageDown',
-    'media-track-like': 'CmdOrCtrl+Shift+numadd',
-    'media-track-dislike': 'CmdOrCtrl+Shift+numsub',
+    'media-track-like': 'CmdOrCtrl+Shift+L',
+    'media-track-dislike': 'CmdOrCtrl+Shift+D',
+    'media-volume-up': 'CmdOrCtrl+Shift+Up',
+    'media-volume-down': 'CmdOrCtrl+Shift+Down',
 })
+
+let accelerators = settingsProvider.get('settings-accelerators')
+if (!accelerators['media-volume-up']) {
+    settingsProvider.set('settings-accelerators', {
+        'media-play-pause': 'CmdOrCtrl+Shift+Space',
+        'media-track-next': 'CmdOrCtrl+Shift+PageUp',
+        'media-track-previous': 'CmdOrCtrl+Shift+PageDown',
+        'media-track-like': 'CmdOrCtrl+Shift+L',
+        'media-track-dislike': 'CmdOrCtrl+Shift+D',
+        'media-volume-up': 'CmdOrCtrl+Shift+Up',
+        'media-volume-down': 'CmdOrCtrl+Shift+Down',
+    })
+} else {
+}
 
 settingsProvider.setInitialValue('has-updated', false)
 
@@ -51,3 +71,15 @@ settingsProvider.setInitialValue('discord-presence-settings', {
     time: true,
     hideIdle: true,
 })
+
+settingsProvider.setInitialValue(
+    'settings-disable-hardware-acceleration',
+    false
+)
+
+settingsProvider.setInitialValue('settings-windows10-media-service', false)
+
+settingsProvider.setInitialValue(
+    'settings-windows10-media-service-show-info',
+    false
+)

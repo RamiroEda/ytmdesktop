@@ -1,17 +1,16 @@
-const { ipcMain, app, ipcRenderer } = require('electron')
+const { ipcMain, app } = require('electron')
 const http = require('http')
 const os = require('os')
 const networkInterfaces = os.networkInterfaces()
 const qrcode = require('qrcode-generator')
 const infoPlayerProvider = require('../providers/infoPlayerProvider')
 const settingsProvider = require('../providers/settingsProvider')
-const zeroconf = require('zeroconf')()
 
 const ip = '0.0.0.0'
 const port = 9863
 const hostname = os.hostname()
 
-const pattIgnoreInterface = /(virtual|wsl|vEthernet|Default Switch)\w*/gim
+const pattIgnoreInterface = /(virtual|wsl|vEthernet|Default Switch|VMware|Adapter)\w*/gim
 
 let totalConnections = 0
 let timerTotalConections
@@ -41,6 +40,7 @@ function fetchNetworkInterfaces() {
                     var data = {
                         name: v,
                         ip: vv.address,
+                        //isProtected: infoServer().isProtected
                     }
                     serverInterfaces.push(data)
                 }
@@ -55,12 +55,11 @@ var serverFunction = function (req, res) {
 
         serverInterfaces.forEach((value) => {
             let qr = qrcode(6, 'H')
-            value['isProtected'] = infoServer().isProtected
             qr.addData(JSON.stringify(value))
             qr.make()
 
             collection += `
-                          <div class="row" style="margin-top: 10px;">
+                          <div class="center row" >
                               <div class="col s12">
                                   <div class="card transparent z-depth-0">
                                       <div class="card-content">
@@ -97,7 +96,7 @@ var serverFunction = function (req, res) {
               <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
               <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
               <style>
-                  html, body {
+                  html {
                       margin: 0;
                       padding: 0;
                       text-align: center;
@@ -107,10 +106,19 @@ var serverFunction = function (req, res) {
                   h5 {
                       margin: 1rem 0 1rem 0 !important;
                   }
+
+                  .center {
+                    width: 68%;
+                    /*height: 400px;*/
+                    position: absolute;
+                    left: 50%;
+                    top: 48%;
+                    transform: translate(-50%, -50%);
+                  }
               </style>
           </head>
           <body>              
-              <h3 class="red-text">YTMDesktop Remote Control</h3>
+              <h4 class="white-text">YTMDesktop Remote Control</h4>
               
               <div class="row" style="height: 0; visibility: ${
                   infoPlayerProvider.getTrackInfo().id ? 'visible' : 'hidden'
@@ -140,23 +148,24 @@ var serverFunction = function (req, res) {
   
               </div>
   
-              <div class="card-panel transparent z-depth-0 white-text" style="position: fixed; bottom: 0; text-align: center; width: 100%;">
-                  <a class="${
-                      isProtected ? 'white-text' : 'orange-text'
-                  } btn-flat tooltipped" data-position="top" data-tooltip="${
+              <div class="card-panel transparent z-depth-0 white-text" style="position: fixed; bottom: 0; text-align: center; width: 100%; padding: 0;">
+                <div>
+                    <a href='https://play.google.com/store/apps/details?id=app.ytmdesktop.remote&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1' target="_blank">
+                        <img width="200" alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png'/>
+                    </a>
+                </div>
+
+                <a class="${
+                    isProtected ? 'white-text' : 'orange-text'
+                } btn-flat tooltipped" data-position="top" data-tooltip="${
             isProtected ? 'Protected' : 'Not protected'
         } with password"><i class="material-icons tiny">${
             isProtected ? 'lock' : 'lock_open'
-        }</i></a>
+        }</i>
+                </a>
                   ${hostname} 
                   <a class="white-text btn-flat tooltipped" data-position="top" data-tooltip="Devices Connected"><i class="material-icons left">devices_other</i>${totalConnections}</a>
               </div>
-
-              <!--div>
-                <a href='https://play.google.com/store/apps/details?id=app.ytmdesktop.remote&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'>
-                    <img width="200" alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png'/>
-                </a>
-              </div-->
           </body>
           <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
           <script>
@@ -305,19 +314,6 @@ function canConnect(socket) {
 }
 
 function start() {
-    zeroconf.publish({
-        type: 'http',
-        protocol: 'tcp',
-        port: port,
-        name: 'ytmdesktop',
-    })
-    zeroconf.publish({
-        type: 'ws',
-        protocol: 'tcp',
-        port: port,
-        name: 'ytmdesktop',
-    })
-
     server.listen(port, ip)
     const io = require('socket.io')(server)
 
@@ -363,7 +359,10 @@ function start() {
 
     fetchNetworkInterfaces()
 
-    console.log('Companion Server listening on port ' + port)
+    ipcMain.emit('log', {
+        type: 'info',
+        data: `Companion Server listening on port ${port}`,
+    })
 }
 
 function stop() {

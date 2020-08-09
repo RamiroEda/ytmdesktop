@@ -16,6 +16,13 @@ const path = require('path')
 const isDev = require('electron-is-dev')
 const ClipboardWatcher = require('electron-clipboard-watcher')
 const electronLocalshortcut = require('electron-localshortcut')
+const electronLog = require('electron-log')
+const os = require('os')
+
+const { calcYTViewSize } = require('./src/utils/calcYTViewSize')
+const { isWindows, isMac, isLinux } = require('./src/utils/systemInfo')
+const { checkWindowPosition, doBehavior } = require('./src/utils/window')
+const fileSystem = require('./src/utils/fileSystem')
 
 const __ = require('./src/providers/translateProvider')
 const assetsProvider = require('./src/providers/assetsProvider')
@@ -27,12 +34,6 @@ const rainmeterNowPlaying = require('./src/providers/rainmeterNowPlaying')
 const companionServer = require('./src/providers/companionServer')
 const discordRPC = require('./src/providers/discordRpcProvider')
 const mprisProvider = require('./src/providers/mprisProvider')
-
-const { calcYTViewSize } = require('./src/utils/calcYTViewSize')
-const { isWindows, isMac, isLinux } = require('./src/utils/systemInfo')
-const { checkWindowPosition, doBehavior } = require('./src/utils/window')
-const fileSystem = require('./src/utils/fileSystem')
-
 /* Variables =========================================================================== */
 const defaultUrl = 'https://music.youtube.com'
 
@@ -47,7 +48,10 @@ let mainWindow,
     lastTrackId,
     lastTrackProgress,
     doublePressPlayPause,
-    updateTrackInfoTimeout
+    updateTrackInfoTimeout,
+    activityIsPaused,
+    activityLikeStatus,
+    windowsMediaProvider
 
 let isFirstTime = false
 
@@ -80,29 +84,27 @@ app.commandLine.appendSwitch('disable-features', 'MediaSessionService') //This k
 
 app.setAsDefaultProtocolClient('ytmd', process.execPath)
 
-createDocumentsAppDir()
+createCustomAppDir()
 
 createCustomCSSDir()
 createCustomCSSPageFile()
 
-if (settingsProvider.get('settings-companion-server')) {
-    companionServer.start()
-}
-
-if (settingsProvider.get('settings-rainmeter-web-now-playing')) {
-    rainmeterNowPlaying.start()
-}
-
-if (settingsProvider.get('settings-discord-rich-presence')) {
-    discordRPC.start()
-}
-
-if (settingsProvider.get('has-updated')) {
+if (settingsProvider.get('has-updated') == true) {
     setTimeout(() => {
-        console.log('has-updated')
+        writeLog({ type: 'info', data: 'YTMDesktop updated' })
         ipcMain.emit('window', { command: 'show-changelog' })
     }, 2000)
     settingsProvider.set('has-updated', false)
+}
+
+if (
+    isWindows() &&
+    os.release().startsWith('10.') &&
+    settingsProvider.get('settings-windows10-media-service')
+) {
+    try {
+        windowsMediaProvider = require('./src/providers/windowsMediaProvider')
+    } catch {}
 }
 
 if (isLinux()) {
@@ -127,6 +129,10 @@ if (isMac()) {
     )
     const menu = Menu.buildFromTemplate(statusBarMenu)
     Menu.setApplicationMenu(menu)
+}
+
+if (settingsProvider.get('settings-disable-hardware-acceleration')) {
+    app.disableHardwareAcceleration()
 }
 
 /* Functions ============================================================================= */
@@ -263,15 +269,8 @@ function createWindow() {
         }
     }
 
-    mainWindow.on('ready-to-show', () => {
-        console.log('show')
-    })
-
-    // Emitted when the window is closed.
     mainWindow.on('closed', function () {
-        // Dereference the window object, usually you would store windows
-        // in an array if your app supports multi windows, this is the time
-        // when you should delete the corresponding element.
+        view = null
         mainWindow = null
     })
 
@@ -316,7 +315,18 @@ function createWindow() {
     view.webContents.on('media-started-playing', function () {
         if (!infoPlayerProvider.hasInitialized()) {
             infoPlayerProvider.init(view)
-            mprisProvider.setRealPlayer(infoPlayerProvider) //this lets us keep track of the current time in playback.
+            if (isLinux()) {
+                mprisProvider.setRealPlayer(infoPlayerProvider) //this lets us keep track of the current time in playback.
+            }
+        }
+
+        if (
+            isWindows() &&
+            os.release().startsWith('10.') &&
+            settingsProvider.get('settings-windows10-media-service') &&
+            windowsMediaProvider != undefined
+        ) {
+            windowsMediaProvider.init(view)
         }
 
         if (isMac()) {
@@ -363,17 +373,33 @@ function createWindow() {
         var duration = trackInfo.duration
         var cover = trackInfo.cover
         var nowPlaying = `${title} - ${author}`
-        // logDebug(nowPlaying)
 
         if (title && author) {
             discordRPC.setActivity(getAll())
             rainmeterNowPlaying.setActivity(getAll())
             mprisProvider.setActivity(getAll())
 
-            mediaControl.createThumbar(
-                mainWindow,
-                infoPlayerProvider.getAllInfo()
-            )
+            if (
+                playerInfo.isPaused != activityIsPaused ||
+                playerInfo.likeStatus != activityLikeStatus
+            ) {
+                mediaControl.createThumbar(
+                    mainWindow,
+                    infoPlayerProvider.getAllInfo()
+                )
+
+                activityIsPaused = playerInfo.isPaused
+                activityLikeStatus = playerInfo.likeStatus
+
+                if (
+                    isWindows() &&
+                    os.release().startsWith('10.') &&
+                    settingsProvider.get('settings-windows10-media-service') &&
+                    windowsMediaProvider != undefined
+                ) {
+                    windowsMediaProvider.setPlaybackStatus(playerInfo.isPaused)
+                }
+            }
 
             mediaControl.setProgress(
                 mainWindow,
@@ -410,6 +436,23 @@ function createWindow() {
                 }
             }
 
+            // Experimental
+            /*if (isWindows() && view.webContents.getURL().indexOf('v=') != -1) {
+                mainWindow.setThumbnailClip({
+                    x: 230,
+                    y: 150,
+                    width: 676,
+                    height: 676,
+                })
+            } else {
+                mainWindow.setThumbnailClip({
+                    x: 0,
+                    y: 0,
+                    width: mainWindow.getSize()[0],
+                    height: mainWindow.getSize()[1],
+                })
+            }*/
+
             /**
              * Update only when change track
              */
@@ -426,6 +469,7 @@ function createWindow() {
                 }
 
                 mainWindow.setTitle(nowPlaying)
+
                 tray.setTooltip(nowPlaying)
 
                 if (
@@ -434,14 +478,30 @@ function createWindow() {
                 ) {
                     tray.balloon(title, author, cover, iconDefault)
                 }
-            }
 
-            if (!isMac() && !settingsProvider.get('settings-shiny-tray')) {
-                if (playerInfo.isPaused) {
-                    tray.updateTrayIcon(iconPause)
-                } else {
-                    tray.updateTrayIcon(iconPlay)
+                if (
+                    isWindows() &&
+                    os.release().startsWith('10.') &&
+                    settingsProvider.get('settings-windows10-media-service') &&
+                    windowsMediaProvider != undefined
+                ) {
+                    windowsMediaProvider.setPlaybackData(
+                        title,
+                        author,
+                        cover,
+                        album
+                    )
                 }
+
+                if (!isMac() && !settingsProvider.get('settings-shiny-tray')) {
+                    if (playerInfo.isPaused) {
+                        tray.updateTrayIcon(iconPause)
+                    } else {
+                        tray.updateTrayIcon(iconPlay)
+                    }
+                }
+
+                writeLog({ type: 'info', data: `Listen: ${title} - ${author}` })
             }
 
             lastTrackProgress = progress
@@ -572,28 +632,106 @@ function createWindow() {
         mediaControl.nextTrack(view)
     })
 
-    globalShortcut.register('CmdOrCtrl+Shift+Space', function () {
-        mediaControl.playPauseTrack(view)
-    })
+    // Custom accelerators
+    let settingsAccelerator = settingsProvider.get('settings-accelerators')
 
-    globalShortcut.register('CmdOrCtrl+Shift+PageUp', function () {
-        mediaControl.nextTrack(view)
-    })
+    globalShortcut.register(
+        settingsAccelerator['media-play-pause'],
+        function () {
+            mediaControl.playPauseTrack(view)
+        }
+    )
 
-    globalShortcut.register('CmdOrCtrl+Shift+PageDown', function () {
-        mediaControl.previousTrack(view)
-    })
+    globalShortcut.register(
+        settingsAccelerator['media-track-next'],
+        function () {
+            mediaControl.nextTrack(view)
+        }
+    )
 
-    globalShortcut.register('CmdOrCtrl+Shift+numadd', function () {
-        mediaControl.upVote(view)
-    })
+    globalShortcut.register(
+        settingsAccelerator['media-track-previous'],
+        function () {
+            mediaControl.previousTrack(view)
+        }
+    )
 
-    globalShortcut.register('CmdOrCtrl+Shift+numsub', function () {
-        mediaControl.downVote(view)
-    })
+    globalShortcut.register(
+        settingsAccelerator['media-track-like'],
+        function () {
+            mediaControl.upVote(view)
+        }
+    )
 
-    ipcMain.on('restore-main-window', function () {
-        mainWindow.show()
+    globalShortcut.register(
+        settingsAccelerator['media-track-dislike'],
+        function () {
+            mediaControl.downVote(view)
+        }
+    )
+
+    globalShortcut.register(
+        settingsAccelerator['media-volume-up'],
+        function () {
+            mediaControl.volumeUp(view)
+        }
+    )
+
+    globalShortcut.register(
+        settingsAccelerator['media-volume-down'],
+        function () {
+            mediaControl.volumeDown(view)
+        }
+    )
+
+    ipcMain.on('change-accelerator', (event, args) => {
+        try {
+            globalShortcut.unregister(args.oldValue)
+        } catch (_) {}
+
+        switch (args.type) {
+            case 'media-play-pause':
+                globalShortcut.register(args.newValue, () => {
+                    mediaControl.playPauseTrack(view)
+                })
+                break
+
+            case 'media-track-next':
+                globalShortcut.register(args.newValue, () => {
+                    mediaControl.nextTrack(view)
+                })
+                break
+
+            case 'media-track-previous':
+                globalShortcut.register(args.newValue, () => {
+                    mediaControl.previousTrack(view)
+                })
+                break
+
+            case 'media-track-like':
+                globalShortcut.register(args.newValue, () => {
+                    mediaControl.upVote(view)
+                })
+                break
+
+            case 'media-track-dislike':
+                globalShortcut.register(args.newValue, () => {
+                    mediaControl.downVote(view)
+                })
+                break
+
+            case 'media-volume-up':
+                globalShortcut.register(args.newValue, () => {
+                    mediaControl.volumeUp(view)
+                })
+                break
+
+            case 'media-volume-down':
+                globalShortcut.register(args.newValue, () => {
+                    mediaControl.volumeDown(view)
+                })
+                break
+        }
     })
 
     ipcMain.handle('invoke-all-info', async (event, args) => {
@@ -797,6 +935,10 @@ function createWindow() {
 
             case 'restore-main-window':
                 mainWindow.show()
+                try {
+                    miniplayer.close()
+                    miniplayer = undefined
+                } catch {}
                 break
 
             case 'show-discord-settings':
@@ -857,15 +999,21 @@ function createWindow() {
                 modal: false,
                 frame: false,
                 center: false,
-                resizable: false,
+                resizable: settingsProvider.get(
+                    'settings-miniplayer-resizable'
+                ),
                 alwaysOnTop: settingsProvider.get(
                     'settings-miniplayer-always-top'
                 ),
-                backgroundColor: '#000000',
+                width: settingsProvider.get('settings-miniplayer-size'),
+                height: settingsProvider.get('settings-miniplayer-size'),
+                backgroundColor: '#232323',
                 minWidth: 100,
                 minHeight: 100,
                 autoHideMenuBar: true,
-                skipTaskbar: false,
+                skipTaskbar: !settingsProvider.get(
+                    'settings-miniplayer-show-task'
+                ),
                 webPreferences: {
                     nodeIntegration: true,
                 },
@@ -881,30 +1029,32 @@ function createWindow() {
             switch (settingsProvider.get('settings-miniplayer-size')) {
                 case '1':
                     miniplayer.setSize(170, 170)
+                    settingsProvider.set('settings-miniplayer-size', 170)
                     break
 
                 case '2':
                     miniplayer.setSize(200, 200)
+                    settingsProvider.set('settings-miniplayer-size', 200)
                     break
 
                 case '3':
                     miniplayer.setSize(230, 230)
+                    settingsProvider.set('settings-miniplayer-size', 230)
                     break
 
                 case '4':
                     miniplayer.setSize(260, 260)
+                    settingsProvider.set('settings-miniplayer-size', 260)
                     break
 
                 case '5':
                     miniplayer.setSize(290, 290)
+                    settingsProvider.set('settings-miniplayer-size', 290)
                     break
 
                 case '6':
                     miniplayer.setSize(320, 320)
-                    break
-
-                default:
-                    miniplayer.setSize(200, 200)
+                    settingsProvider.set('settings-miniplayer-size', 320)
                     break
             }
 
@@ -930,11 +1080,26 @@ function createWindow() {
                 }, 1000)
             })
 
+            let storeMiniplayerSizeTimer
+            miniplayer.on('resize', function (e) {
+                let size = miniplayer.getSize()
+                if (storeMiniplayerSizeTimer) {
+                    clearTimeout(storeMiniplayerSizeTimer)
+                }
+                storeMiniplayerSizeTimer = setTimeout(() => {
+                    settingsProvider.set(
+                        'settings-miniplayer-size',
+                        Math.min(...size)
+                    )
+                    miniplayer.setSize(Math.min(...size), Math.min(...size))
+                }, 500)
+            })
+
             mainWindow.hide()
 
             globalShortcut.register('CmdOrCtrl+M', function () {
                 miniplayer.close()
-                miniplayer = null
+                miniplayer = undefined
                 mainWindow.show()
             })
         }
@@ -1240,7 +1405,9 @@ function createWindow() {
         `
             )
             .then((_) => {})
-            .catch((_) => console.log('error setAudioOutput'))
+            .catch((_) =>
+                writeLog({ type: 'warn', data: 'error setAudioOutput' })
+            )
     }
 
     function loadAudioOutput() {
@@ -1251,7 +1418,7 @@ function createWindow() {
 
     function loadCustomCSSApp() {
         const customThemeFile = path.join(
-            fileSystem.getAppDocumentsPath(app),
+            fileSystem.getAppDataPath(app),
             '/custom/css/app.css'
         )
 
@@ -1275,7 +1442,7 @@ function createWindow() {
 
     function loadCustomCSSPage() {
         const customThemeFile = path.join(
-            fileSystem.getAppDocumentsPath(app),
+            fileSystem.getAppDataPath(app),
             '/custom/css/page.css'
         )
 
@@ -1405,7 +1572,7 @@ if (!gotTheLock) {
 
             setInterval(function () {
                 updater.checkUpdate(mainWindow, view)
-            }, 6 * 60 * 60 * 1000)
+            }, 24 * 60 * 60 * 1000)
         }
 
         ipcMain.emit('ready', app)
@@ -1481,10 +1648,10 @@ function bytesToSize(bytes) {
     return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i]
 }
 
-function createDocumentsAppDir() {
-    if (!fileSystem.checkIfExists(fileSystem.getAppDocumentsPath(app))) {
+function createCustomAppDir() {
+    if (!fileSystem.checkIfExists(fileSystem.getAppDataPath(app))) {
         isFirstTime = true
-        fileSystem.createDir(fileSystem.getAppDocumentsPath(app))
+        fileSystem.createDir(fileSystem.getAppDataPath(app))
     } else {
         isFirstTime = false
     }
@@ -1492,7 +1659,7 @@ function createDocumentsAppDir() {
 
 function createCustomCSSDir() {
     const dirCustomTheme = path.join(
-        fileSystem.getAppDocumentsPath(app),
+        fileSystem.getAppDataPath(app),
         '/custom/css'
     )
 
@@ -1502,22 +1669,34 @@ function createCustomCSSDir() {
 }
 
 function createCustomCSSPageFile() {
-    const customThemeFile = path.join(
+    const oldCustomThemeFile = path.join(
         fileSystem.getAppDocumentsPath(app),
         '/custom/css/page.css'
     )
 
+    const customThemeFile = path.join(
+        fileSystem.getAppDataPath(app),
+        '/custom/css/page.css'
+    )
+
     if (!fileSystem.checkIfExists(customThemeFile)) {
-        fileSystem.writeFile(
-            customThemeFile,
-            `/** \n * Custom css for page \n*/\n\nhtml, body { background: #1D1D1D !important; }`
-        )
+        if (fileSystem.checkIfExists(oldCustomThemeFile)) {
+            fileSystem.writeFile(
+                customThemeFile,
+                fileSystem.readFile(oldCustomThemeFile)
+            )
+        } else {
+            fileSystem.writeFile(
+                customThemeFile,
+                `/** \n * Custom css for page \n*/\n\nhtml, body { background: #1D1D1D !important; }`
+            )
+        }
     }
 }
 
 function loadCustomAppScript() {
     const customAppScriptFile = path.join(
-        fileSystem.getAppDocumentsPath(app),
+        fileSystem.getAppDataPath(app),
         'custom/js/app.js'
     )
 
@@ -1530,7 +1709,7 @@ function loadCustomAppScript() {
 
 function loadCustomPageScript() {
     const customPageScriptFile = path.join(
-        fileSystem.getAppDocumentsPath(app),
+        fileSystem.getAppDataPath(app),
         'custom/js/page.js'
     )
 
@@ -1540,9 +1719,41 @@ function loadCustomPageScript() {
                 fileSystem.readFile(customPageScriptFile).toString()
             )
         } catch {
-            console.log('Failed to execute page.js')
+            writeLog({ type: 'warn', data: 'Failed to execute page.js' })
         }
     }
+}
+
+ipcMain.on('log', (dataMain, dataRenderer) => {
+    if (dataMain.type !== undefined) {
+        writeLog(dataMain)
+    } else {
+        writeLog(dataRenderer)
+    }
+})
+
+function writeLog(log) {
+    switch (log.type) {
+        case 'info':
+            electronLog.info(log.data)
+            break
+
+        case 'warn':
+            electronLog.warn(log.data)
+            break
+    }
+}
+
+if (settingsProvider.get('settings-companion-server')) {
+    companionServer.start()
+}
+
+if (settingsProvider.get('settings-rainmeter-web-now-playing')) {
+    rainmeterNowPlaying.start()
+}
+
+if (settingsProvider.get('settings-discord-rich-presence')) {
+    discordRPC.start()
 }
 
 // In this file you can include the rest of your app's specific main process
@@ -1551,6 +1762,7 @@ const mediaControl = require('./src/providers/mediaProvider')
 const tray = require('./src/providers/trayProvider')
 const updater = require('./src/providers/updateProvider')
 const analytics = require('./src/providers/analyticsProvider')
+const { player } = require('./src/providers/mprisProvider')
 
 analytics.setEvent('main', 'start', 'v' + app.getVersion(), app.getVersion())
 analytics.setEvent('main', 'os', process.platform, process.platform)
